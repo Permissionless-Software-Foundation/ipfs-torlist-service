@@ -35,6 +35,12 @@ class EntryUseCaseMock {
   async createEntry(userObj) {
     return {}
   }
+  async getDbEntries() {
+    return []
+  }
+  async getDbEntriesByCategory(category) {
+    return []
+  }
 }
 
 class UseCasesMock {

@@ -1,6 +1,7 @@
 /*
   Mocks for the Adapter library.
 */
+const OrbitDB = require('../orbit-db-mock')
 const ipfs = {
   ipfsAdapter: {
     ipfs: {}
@@ -12,31 +13,31 @@ const ipfs = {
 
 const localdb = {
   Users: class Users {
-    static findById() { }
-    static find() { }
-    static findOne() {
+    static findById () {}
+    static find () {}
+    static findOne () {
       return {
         validatePassword: localdb.validatePassword
       }
     }
 
-    async save() {
+    async save () {
       return {}
     }
 
-    generateToken() {
+    generateToken () {
       return '123'
     }
 
-    toJSON() {
+    toJSON () {
       return {}
     }
 
-    async remove() {
+    async remove () {
       return true
     }
 
-    async validatePassword() {
+    async validatePassword () {
       return true
     }
   },
@@ -46,8 +47,8 @@ const localdb = {
   },
 
   Entry: class Entry {
-    constructor(obj){
-      this._id = 'id',
+    constructor (obj) {
+      this._id = 'id'
       this.entry = obj.entry
       this.slpAddress = obj.slpAddress
       this.description = obj.description
@@ -56,23 +57,42 @@ const localdb = {
       this.balance = obj.balance
       this.merit = obj.merit
     }
-    
-    static findById() { }
-    static find() { }
-    static findOne() {}
 
-    async save() {
+    static findById () {}
+    static find () {}
+    static findOne () {}
+
+    async save () {
       return {}
     }
+  },
+  Blacklist: class Blacklist {
+    constructor (obj) {
+      this._id = 'id'
+      this.entry = obj.entry
+    }
 
+    static findById () {}
+    static find () {}
+    static findOne () {}
+
+    async save () {
+      return {}
+    }
   }
 }
 
 const bchjs = {
-  getMerit: async () => { return 100 },
-  getPSFTokenBalance: async () => { return 100 },
-  _verifySignature: () => { return true }
+  getMerit: async () => {
+    return 100
+  },
+  getPSFTokenBalance: async () => {
+    return 100
+  },
+  _verifySignature: () => {
+    return true
+  }
 }
 
-
-module.exports = { ipfs, localdb, bchjs }
+const orbitDB = new OrbitDB()
+module.exports = { ipfs, localdb, bchjs, orbitDB }

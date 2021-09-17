@@ -81,5 +81,11 @@ module.exports = {
   // BCH Mnemonic for generating encryption keys and payment address
   mnemonic: process.env.MNEMONIC ? process.env.MNEMONIC : '',
 
-  debugLevel: process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1
+  debugLevel: process.env.DEBUG_LEVEL ? parseInt(process.env.DEBUG_LEVEL) : 1,
+
+  // Orbit db options
+  orbitOptions: {
+    repo: './orbitdb/examples/orbit',
+    dbString: 'tor-list0002'
+  }
 }

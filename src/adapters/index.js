@@ -16,6 +16,7 @@ const Nodemailer = require('./nodemailer')
 // const { wlogger } = require('./wlogger')
 const JSONFiles = require('./json-files')
 const FullStackJWT = require('./fullstack-jwt')
+const OrbitDB = require('./orbit-db')
 // const BCHJSAdapter = require('./bch')
 //
 // // Instantiate adapter libraries.
@@ -50,6 +51,7 @@ class Adapters {
     this.jsonFiles = new JSONFiles()
     this.bchjs = new BCHJS()
     this.config = config
+    this.orbitDB = new OrbitDB()
 
     // Get a valid JWT API key and instance bch-js.
     this.fullStackJwt = new FullStackJWT(config)
@@ -67,6 +69,8 @@ class Adapters {
 
       // Start the IPFS node.
       await this.ipfs.start()
+      // Start orbit instance
+      await this.orbitDB.startOrbit(this.ipfs.ipfs)
     } catch (err) {
       console.error('Error in adapters/index.js/start()')
       throw err
