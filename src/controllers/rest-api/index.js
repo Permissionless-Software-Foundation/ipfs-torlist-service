@@ -12,6 +12,7 @@ const UserRouter = require('./users')
 const ContactRESTController = require('./contact')
 const LogsRESTController = require('./logs')
 const EntryRouter = require('./entry')
+const OrbitDbRouter = require('./orbit-db')
 
 class RESTControllers {
   constructor (localConfig = {}) {
@@ -57,6 +58,10 @@ class RESTControllers {
     // Attach the REST API Controllers associated with the /entry route
     const entryRouter = new EntryRouter(dependencies)
     entryRouter.attach(app)
+
+    // Attach the REST API Controllers associated with the /orbitdb route
+    const orbitDbRouter = new OrbitDbRouter(dependencies)
+    orbitDbRouter.attach(app)
   }
 }
 

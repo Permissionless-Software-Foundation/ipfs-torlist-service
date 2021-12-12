@@ -8,8 +8,7 @@ const sinon = require('sinon')
 // Unit under test (uut)
 const EntryLib = require('../../../src/use-cases/entry')
 const adapters = require('../mocks/adapters')
-
-describe('#users-use-case', () => {
+describe('#entry-use-case', () => {
   let uut
   let sandbox
 
@@ -95,7 +94,8 @@ describe('#users-use-case', () => {
           entry: 'entry',
           description: 'test',
           slpAddress: 'simpleledger:qpnty9t0w93fez04h7yzevujpv8pun204qqp0jfafg',
-          signature: 'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw='
+          signature:
+            'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw='
         }
         await uut.createEntry(inputData)
         assert.fail('Unexpected code path')
@@ -112,7 +112,8 @@ describe('#users-use-case', () => {
           entry: 'entry',
           description: 'test',
           slpAddress: 'simpleledger:qpnty9t0w93fez04h7yzevujpv8pun204qqp0jfafg',
-          signature: 'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
+          signature:
+            'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
           category: 'test'
         }
 
@@ -126,13 +127,16 @@ describe('#users-use-case', () => {
     it('should throw error if signature is invalid', async () => {
       try {
         // Mocking bchjs functions
-        sandbox.stub(uut.bchjs, '_verifySignature').callsFake(() => { return false })
+        sandbox.stub(uut.bchjs, '_verifySignature').callsFake(() => {
+          return false
+        })
 
         const inputData = {
           entry: 'entry',
           description: 'test',
           slpAddress: 'simpleledger:qpnty9t0w93fez04h7yzevujpv8pun204qqp0jfafg',
-          signature: 'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
+          signature:
+            'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
           category: 'test'
         }
 
@@ -152,7 +156,8 @@ describe('#users-use-case', () => {
           entry: 'entry',
           description: 'test',
           slpAddress: 'simpleledger:qpnty9t0w93fez04h7yzevujpv8pun204qqp0jfafg',
-          signature: 'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
+          signature:
+            'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
           category: 'test'
         }
 
@@ -174,7 +179,8 @@ describe('#users-use-case', () => {
         entry: 'entry',
         description: 'test',
         slpAddress: 'simpleledger:qpnty9t0w93fez04h7yzevujpv8pun204qqp0jfafg',
-        signature: 'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
+        signature:
+          'IFytRg6KpvTHCzcW0ZwVhPqdKtRGpoRDcuEb958yIgJFUJlb1F5qPzt/JnlYE7r012BSFj+UT67DZVTU8oNB5vw=',
         category: 'test'
       }
 
@@ -200,6 +206,114 @@ describe('#users-use-case', () => {
 
       assert.property(result, 'merit')
       assert.isNumber(result.merit)
+    })
+  })
+
+  describe('#filterEntries', () => {
+    it('should throw an error if input is not an array', async () => {
+      try {
+        await uut.filterEntries({})
+        assert.fail('Unexpected code path')
+      } catch (err) {
+        assert.include(err.message, 'Input must be an array of entries')
+      }
+    })
+    it('should return array if input is an empty array', async () => {
+      try {
+        const result = await uut.filterEntries([])
+        assert.isArray(result)
+        assert.equal(result.length, 0)
+      } catch (err) {
+        assert.fail('Unexpected code path')
+      }
+    })
+
+    it('should return the array if blacklist is empty', async () => {
+      try {
+        sandbox.stub(uut.BlacklistModel, 'find').resolves([])
+
+        const result = await uut.filterEntries(['entry'])
+        assert.isArray(result)
+        assert.equal(result.length, 1)
+      } catch (err) {
+        assert.fail('Unexpected code path')
+      }
+    })
+
+    it('should filter categories', async () => {
+      try {
+        const blacklist = [
+          {
+            hash: 'txid1'
+          }
+        ]
+
+        const entries = [
+          {
+            _id: 'txid1'
+          },
+          {
+            _id: 'txid2'
+          }
+        ]
+        sandbox.stub(uut.BlacklistModel, 'find').resolves(blacklist)
+
+        const result = await uut.filterEntries(entries)
+        assert.isArray(result)
+        assert.equal(result.length, 1)
+        assert.notEqual(result[0]._id, blacklist[0].hash)
+      } catch (err) {
+        assert.fail('Unexpected code path')
+      }
+    })
+  })
+
+  describe('#getDbEntries', () => {
+    it('should catch error', async () => {
+      try {
+        sandbox.stub(uut.orbitDB, 'getNode').throws(new Error('test error'))
+
+        await uut.getDbEntries()
+        assert.fail('Unexpected code path')
+      } catch (err) {
+        assert.include(err.message, 'test error')
+      }
+    })
+    it('should get db entries', async () => {
+      try {
+        const entries = await uut.getDbEntries()
+        assert.isArray(entries)
+      } catch (err) {
+        assert.fail('Unexpected code path')
+      }
+    })
+  })
+  describe('#getDbEntriesByCategory', () => {
+    it('should throw error if input is not provided', async () => {
+      try {
+        await uut.getDbEntriesByCategory()
+        assert.fail('Unexpected code path')
+      } catch (err) {
+        assert.include(err.message, 'category must be a string')
+      }
+    })
+    it('should catch error', async () => {
+      try {
+        sandbox.stub(uut.orbitDB, 'getNode').throws(new Error('test error'))
+
+        await uut.getDbEntriesByCategory('bch')
+        assert.fail('Unexpected code path')
+      } catch (err) {
+        assert.include(err.message, 'test error')
+      }
+    })
+    it('should get db entries', async () => {
+      try {
+        const entries = await uut.getDbEntriesByCategory('bch')
+        assert.isArray(entries)
+      } catch (err) {
+        assert.fail('Unexpected code path')
+      }
     })
   })
 })
