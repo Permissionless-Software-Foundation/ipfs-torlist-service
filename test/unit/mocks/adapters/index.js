@@ -6,7 +6,13 @@ const ipfs = {
     ipfs: {}
   },
   ipfsCoordAdapter: {
-    ipfsCoord: {}
+    ipfsCoord: {
+      useCases: {
+        peer: {
+          sendPrivateMessage: () => {}
+        }
+      }
+    }
   }
 }
 

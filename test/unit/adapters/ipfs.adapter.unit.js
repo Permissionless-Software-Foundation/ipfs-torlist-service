@@ -47,4 +47,38 @@ describe('#IPFS-adapter', () => {
       }
     })
   })
+
+  describe('#stop', () => {
+    it('should stop the IPFS node', async () => {
+      // Mock dependencies
+      uut.ipfs = {
+        stop: () => {}
+      }
+
+      const result = await uut.stop()
+
+      assert.equal(result, true)
+    })
+  })
+
+  describe('#rmBlocksDir', () => {
+    it('should delete the /blocks directory', () => {
+      const result = uut.rmBlocksDir()
+
+      assert.equal(result, true)
+    })
+
+    it('should catch and throw an error', () => {
+      try {
+        // Force an error
+        sandbox.stub(uut.fs, 'rmdirSync').throws(new Error('test error'))
+
+        uut.rmBlocksDir()
+
+        assert.fail('Unexpected code path')
+      } catch (err) {
+        assert.equal(err.message, 'test error')
+      }
+    })
+  })
 })
