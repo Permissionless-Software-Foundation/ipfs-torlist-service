@@ -11,9 +11,12 @@
 // Global npm libraries
 // const IPFS = require('ipfs')
 const IPFS = require('@chris.troutner/ipfs')
+const fs = require('fs')
 
 // Local libraries
 const config = require('../../../config')
+
+const IPFS_DIR = './.ipfsdata/ipfs'
 
 class IpfsAdapter {
   constructor (localConfig) {
@@ -23,6 +26,7 @@ class IpfsAdapter {
     // Properties of this class instance.
     this.isReady = false
     this.config = config
+    this.fs = fs
   }
 
   // Start an IPFS node.
@@ -30,13 +34,13 @@ class IpfsAdapter {
     try {
       // Ipfs Options
       const ipfsOptions = {
-        repo: './.ipfsdata/ipfs',
+        repo: IPFS_DIR,
         start: true,
         config: {
           relay: {
             enabled: true, // enable circuit relay dialer and listener
             hop: {
-              enabled: true // enable circuit relay HOP (make this node a relay)
+              enabled: config.isCircuitRelay // enable circuit relay HOP (make this node a relay)
             }
           },
           pubsub: true, // enable pubsub
@@ -51,6 +55,11 @@ class IpfsAdapter {
               `/ip4/0.0.0.0/tcp/${this.config.ipfsTcpPort}`,
               `/ip4/0.0.0.0/tcp/${this.config.ipfsWsPort}/ws`
             ]
+          },
+          Datastore: {
+            StorageMax: '2GB',
+            StorageGCWatermark: 50,
+            GCPeriod: '15m'
           }
         }
       }
@@ -61,18 +70,50 @@ class IpfsAdapter {
       // Set the 'server' profile so the node does not scan private networks.
       await this.ipfs.config.profiles.apply('server')
 
+      // Debugging: Display IPFS config settings.
+      // const configSettings = await this.ipfs.config.getAll()
+      // console.log(`configSettings: ${JSON.stringify(configSettings, null, 2)}`)
+
       // Signal that this adapter is ready.
       this.isReady = true
 
       return this.ipfs
     } catch (err) {
       console.error('Error in ipfs.js/start()')
+
+      // If IPFS crashes because the /blocks directory is full, wipe the directory.
+      if (err.message.includes('No space left on device')) {
+        this.rmBlocksDir()
+      }
+
       throw err
     }
   }
 
   async stop () {
     await this.ipfs.stop()
+
+    return true
+  }
+
+  // Remove the '/blocks' directory that is used to store IPFS data.
+  // Dev Note: It's assumed this node is not pinning any data and that
+  // everything in this directory is transient. This folder will regularly
+  // fill up and prevent IPFS from starting.
+  rmBlocksDir () {
+    try {
+      const dir = `${IPFS_DIR}/blocks`
+      console.log(`Deleting ${dir} directory...`)
+
+      this.fs.rmdirSync(dir, { recursive: true })
+
+      console.log(`${dir} directory is deleted!`)
+
+      return true // Signal successful execution.
+    } catch (err) {
+      console.log('Error in rmBlocksDir()')
+      throw err
+    }
   }
 }
 
